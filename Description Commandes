@@ -1,0 +1,41 @@
+Cat: Concaténer des fichiers et les affiches sur l'entrée standard BIN
+
+cd: Change de dossier courant du terminal
+
+cp: Copier des fichiers BIN
+
+diff: Comparer des fichiers ligne à ligne
+
+echo: affiche une ligne d'un texte
+
+gcc: compilateur de gnu
+
+gdb: debug
+
+ls: liste les fichiers dans le répertoire courant
+
+make: exécute la première commande du makefile dans le dossier courant
+
+man: Interface de consultation des manuels de référence en ligne
+
+mkdir: créer des répertoires
+
+mv: déplace des fichiers
+
+rm: supprime des fichiers
+
+rmdir: supprime les répertoires vides
+
+sudo: Execute une commande en temps qu'un nouveau utilisateur
+
+tar: stocke et archive des données
+
+time: exécute un programme et donne les ressources du système utilisées
+	  Donne le temps en seconde
+	  Temps d'éxécution d'un programme
+	  
+touch: Modifier l'horodatage d'un fichier
+
+vi: editeur de texte pour programmeurs  :w (write/save) :q (quitter)
+
+GNU core utils
