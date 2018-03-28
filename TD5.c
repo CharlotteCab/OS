@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void* Hello(void* arg)
+void* Hello()
 {
   printf("Hello World !\n");
 
@@ -23,7 +23,7 @@ int main()
   pthread_t tid=0;
   int s,res;
 
-  pthread_create(&tid,NULL,Hello,NULL);
+  s=pthread_create(&tid,NULL,(Hello)(),NULL);
 
   s=pthread_join(&tid,&res);
 
