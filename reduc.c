@@ -33,7 +33,16 @@ typedef int (* ptrVerif) (int *, int, int);
 // Fonction thread -- calcule la somme locale d'un tableau
 // \param	arg 			Message transmis par le thread père
 // \return					NULL
-void * sommeTableau (void * arg) {  }
+void * sommeTableau (void * arg)
+{
+	message_t* msg=(message_t*) arg;
+	msg->res=0;
+	for(int i=msg->start;i<msg->end;i++)
+	{
+		msg->res+=msg->t[i];
+	}
+
+}
 
 // Fin de la réduction -- calcule la somme globale
 // \param	msg				Messages issus de l'exécution des threads,
