@@ -21,10 +21,10 @@ typedef struct {
 
 // Structure contenant les informations nécessaires au thread
 typedef struct {
-							//< Tableau d'entiers à traiter
-							//< Indice de début de traitement
-							//< Indice de fin de traitement (non compris)
-							//< Résultat local
+	int* t; 					//< Tableau d'entiers à traiter
+	int start;						//< Indice de début de traitement
+	int end;						//< Indice de fin de traitement (non compris)
+	int res;						//< Résultat local
 } message_t;
 
 // Alias de pointeurs de fonction
