@@ -37,11 +37,11 @@ void * sommeTableau (void * arg)
 {
 	message_t* msg=(message_t*) arg;
 	msg->res=0;
-	for(int i=msg->start;i<msg->end;i++)
+	for(int i=msg->start;i<=msg->end;i++)
 	{
 		msg->res+=msg->t[i];
 	}
-
+	pthread_exit(NULL);
 }
 
 // Fin de la réduction -- calcule la somme globale
@@ -49,7 +49,15 @@ void * sommeTableau (void * arg)
 //							contiennent les résultats locaux
 // \param	nbThreads		Nombre de threads, et donc de messages
 // \return					Résultat global
-int reducSomme (message_t * msg, int nbThreads) {  }
+int reducSomme (message_t * msg, int nbThreads)
+{
+	int res=0;
+	for(int i=0; i<nbThreads;i++)
+	{
+		res+=msg[i].res;
+	}
+	return res;
+}
 
 // Fonction thread -- calcule la moyenne locale d'un tableau
 // \param	arg 			Message transmis par le thread père
@@ -155,7 +163,27 @@ int verifMin (int * tableau, int tailleTableau, int resultat) {
 // \param	argc			Nombre d'arguments
 // \param	argv			Arguments
 // \return					Structure de données des arguments
-arg_t analyseArguments (int argc, char ** argv) {  }
+arg_t analyseArguments (int argc, char ** argv)
+{
+	if(argc!=4)
+	{
+		printf("Problème dans le nombre d'arguments\n");
+		exit(-1);
+	}
+	arg_t a;
+	a.nbThreads=atoi(argv[1]);
+	a.tailleTableau=atoi(argv[2]);
+	switch (argv[3][0])
+	{
+		case '+': {a.code=OCD_SOMME; break;}
+		case '/': {a.code=OCD_MOYENNE; break;}
+		case 'M': {a.code=OCD_MAX; break;}
+		case 'm': {a.code=OCD_MIN; break;}
+		default: exit(-1);
+	}
+
+	return a;
+}
 
 // NE PAS TOUCHER
 // Récupération de la fonction de vérification à partir de l'opcode
@@ -176,7 +204,16 @@ ptrVerif decodeOpcodeVerif (const opcode_t o) {
 // Génération du tableau avec des entiers compris entre 1 et 100.
 // \param	tailleTableau	Taille du tableau d'entiers
 // \return					Tableau d'entiers
-int * genereTableau (int tailleTableau) {  }
+int * genereTableau (int tailleTableau)
+{
+	int i=0;
+	int *t=malloc(tailleTableau*sizeof(int));
+	for(i=0;i<tailleTableau;i++)
+	{
+		t[i]=rand()%100+1;
+	}
+	return t;
+}
 
 // Fonction chargée de la réduction multi-threadé, elle va initialiser les
 // différentes variables utilisées par les threads (tableau d'entier, messages,
@@ -185,15 +222,62 @@ int * genereTableau (int tailleTableau) {  }
 // \param	arg 			Arguments du programme décodés
 void programmePrincipal (const arg_t arg) {
 	// Déclaration des variables
-	int * tab, res;
+	int * tab, res,taille;
+	message_t *msg=malloc(arg.nbThreads*sizeof(message_t));
+	pthread_t *t=malloc(arg.nbThreads*sizeof(pthread_t));
 
 	// Allocation de la mémoire
+	tab=genereTableau(arg.tailleTableau);
+	if(t==NULL)
+	{
+		printf("Problème allocation mémoire\n");
+		exit(-1);
+	}
 
 	// Initialisation des variables et création des threads
+	taille=arg.tailleTableau/arg.nbThreads;
+	for(int i=0;i<arg.nbThreads-1;i++)
+	{
+		msg[i].t=tab;
+		msg[i].start=taille*i;
+		msg[i].end=taille*(i+1);
+
+		switch (arg.code)
+		{
+			case OCD_SOMME: pthread_create(&t[i],NULL,sommeTableau,&msg[i]);
+			case OCD_MOYENNE: pthread_create(&t[i],NULL,moyenneTableau,&msg[i]);
+			case OCD_MIN: pthread_create(&t[i],NULL,minTableau,&msg[i]);
+			case OCD_MAX: pthread_create(&t[i],NULL,maxTableau,&msg[i]);
+		}
+	}
+	msg[arg.nbThreads-1].t=tab;
+	msg[arg.nbThreads-1].start=arg.tailleTableau%arg.nbThreads*(arg.nbThreads-1);
+	msg[arg.nbThreads-1].end=arg.tailleTableau;
+
+	switch (arg.code)
+	{
+		case OCD_SOMME: pthread_create(&t[arg.nbThreads-1],NULL,sommeTableau,&msg[arg.nbThreads-1]);
+		case OCD_MOYENNE: pthread_create(&t[arg.nbThreads-1],NULL,moyenneTableau,&msg[arg.nbThreads-1]);
+		case OCD_MIN: pthread_create(&t[arg.nbThreads-1],NULL,minTableau,&msg[arg.nbThreads-1]);
+		case OCD_MAX: pthread_create(&t[arg.nbThreads-1],NULL,maxTableau,&msg[arg.nbThreads-1]);
+	}
 
 	// Jointure
+	int i=0;
+	for(i=0;i<arg.nbThreads;i++)
+	{
+		pthread_join(t[i],NULL);
+	}
 
 	// Réduction et affichage du résultat
+	switch (arg.code)
+	{
+		case OCD_SOMME: res=reducSomme(msg,arg.nbThreads);
+		case OCD_MOYENNE: res=reducMoyenne(msg,arg.nbThreads);
+		case OCD_MIN: res=reducMin(msg,arg.nbThreads);
+		case OCD_MAX: res=reducMax(msg,arg.nbThreads);
+	}
+	printf("Le résultat est: %d\n", res);
 
 	// NE PAS TOUCHER
 	if ( (* (decodeOpcodeVerif (arg.code) ) ) (tab, arg.tailleTableau, res) )
@@ -202,6 +286,9 @@ void programmePrincipal (const arg_t arg) {
 	// FIN
 
 	// Libération de la mémoire
+	free(msg);
+	free(t);
+	free(tab);
 }
 
 // NE PAS TOUCHER
